@@ -1,0 +1,20 @@
+{
+  "name": "whatsapp-otp-bot",
+  "version": "1.0.0",
+  "description": "Personal WhatsApp OTP sender for registration. Uses Baileys with pairing-code login (no QR).",
+  "main": "index.js",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "@hapi/boom": "^10.0.1",
+    "@whiskeysockets/baileys": "^6.7.9",
+    "express": "^4.19.2",
+    "pino": "^9.5.0",
+    "qrcode-terminal": "^0.12.0"
+  }
+}
