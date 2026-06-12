@@ -4,23 +4,7 @@
  * Designed for Railway. ONE personal WhatsApp account sends OTPs to users
  * during registration on the main website.
  *
- * Env vars (set in Railway):
- *   PORT                 (Railway provides this)
- *   SHARED_SECRET        shared secret with the website (any long random string)
- *   PHONE_NUMBER         your personal WhatsApp number in E.164 WITHOUT '+' (e.g. 254712345678)
- *                        If unset, you'll be prompted in logs to set it and redeploy.
- *
- * Endpoints (all require header `x-bot-secret: <SHARED_SECRET>`):
- *   GET  /status                -> { connected, user, pairingCode }
- *   GET  /pairing-code          -> { pairingCode } (latest one issued)
- *   POST /send-otp { phone, code }  -> { ok: true }
- *
- * Pairing flow:
- *   1) Deploy with PHONE_NUMBER set.
- *   2) Open Railway logs. An 8-character pairing code will be printed.
- *   3) On your phone: WhatsApp -> Settings -> Linked Devices -> Link a device
- *      -> "Link with phone number instead" -> type the code from the logs.
- *   4) /status will then show connected:true and the bot is ready.
+ * For production, update SHARED_SECRET and PHONE_NUMBER below.
  */
 
 const {
@@ -36,19 +20,14 @@ const pino = require("pino");
 const path = require("path");
 const fs = require("fs");
 
-const PORT = process.env.PORT || 3000;
-const SHARED_SECRET = process.env.SHARED_SECRET || "";
-const PHONE_NUMBER = (process.env.PHONE_NUMBER || "").replace(/[^\d]/g, "");
+const PORT = 3000;
+const SHARED_SECRET = "tK9mXqRwL2pN";
+const PHONE_NUMBER = "254746973459";
 
-if (!SHARED_SECRET) {
-  console.error("[FATAL] SHARED_SECRET env var is required.");
-  process.exit(1);
-}
-
-const AUTH_DIR = process.env.AUTH_DIR || path.join(__dirname, "auth_session");
+const AUTH_DIR = path.join(__dirname, "auth_session");
 fs.mkdirSync(AUTH_DIR, { recursive: true });
 
-const logger = pino({ level: process.env.LOG_LEVEL || "info" });
+const logger = pino({ level: "info" });
 
 let sock = null;
 let isConnected = false;
@@ -74,29 +53,23 @@ async function startBot() {
 
     // Request pairing code if not yet registered
     if (!sock.authState.creds.registered) {
-      if (!PHONE_NUMBER) {
-        console.error(
-          "[PAIRING] PHONE_NUMBER env var not set. Set it (E.164 without '+', e.g. 254712345678) and redeploy."
-        );
-      } else {
-        // small delay required before requesting pairing code
-        setTimeout(async () => {
-          try {
-            const code = await sock.requestPairingCode(PHONE_NUMBER);
-            const pretty = code?.match(/.{1,4}/g)?.join("-") || code;
-            latestPairingCode = pretty;
-            console.log("\n==================================================");
-            console.log(" WhatsApp Pairing Code: " + pretty);
-            console.log(" Phone:                 +" + PHONE_NUMBER);
-            console.log(" Open WhatsApp on your phone:");
-            console.log("  Settings -> Linked Devices -> Link a device");
-            console.log("  -> Link with phone number instead -> enter this code");
-            console.log("==================================================\n");
-          } catch (err) {
-            console.error("[PAIRING] Failed to request pairing code:", err);
-          }
-        }, 3000);
-      }
+      // small delay required before requesting pairing code
+      setTimeout(async () => {
+        try {
+          const code = await sock.requestPairingCode(PHONE_NUMBER);
+          const pretty = code?.match(/.{1,4}/g)?.join("-") || code;
+          latestPairingCode = pretty;
+          console.log("\n==================================================");
+          console.log(" WhatsApp Pairing Code: " + pretty);
+          console.log(" Phone:                 +" + PHONE_NUMBER);
+          console.log(" Open WhatsApp on your phone:");
+          console.log("  Settings -> Linked Devices -> Link a device");
+          console.log("  -> Link with phone number instead -> enter this code");
+          console.log("==================================================\n");
+        } catch (err) {
+          console.error("[PAIRING] Failed to request pairing code:", err);
+        }
+      }, 3000);
     }
 
     sock.ev.on("creds.update", saveCreds);
