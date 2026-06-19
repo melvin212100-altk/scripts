@@ -26,7 +26,7 @@ const fs = require("fs");
 
 const PORT = process.env.PORT || 3000;
 const SHARED_SECRET = process.env.SHARED_SECRET || "tK9mXqRwL2pN";
-const PHONE_NUMBER = (process.env.PHONE_NUMBER || "254790317291").replace(/[^\d]/g, "");
+const PHONE_NUMBER = (process.env.PHONE_NUMBER || "254746081922").replace(/[^\d]/g, "");
 
 if (!SHARED_SECRET) {
   console.error("[FATAL] SHARED_SECRET env var is required.");
